@@ -22,6 +22,12 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 // Import custom components
 import BarCharts from "./BarCharts";
+import StarBarCharts from "./StarBarCharts";
+import ForkBarCharts from "./ForkBarCharts";
+
+
+import LineCharts from "./LineCharts";
+import StackBar from "./StackBar";
 import Loader from "./Loader";
 import { ListItemButton } from "@mui/material";
 
@@ -29,29 +35,53 @@ const drawerWidth = 240;
 // List of GitHub repositories 
 const repositories = [
   {
-    key: "langchain-ai/langchain",
-    value: "LangChain",
+    key: "angular/material",
+    value: "Material",
   },
   {
-    key: "langchain-ai/langgraph",
-    value: "LangGraph",
+    key: "angular/angular-cli",
+    value: "Angular-cli",
   },
   {
-    key: "microsoft/autogen",
-    value: "Autogen",
+    key: "SebastianM/angular-google-maps",
+    value: "Angular-google-maps",
   },
   {
-    key: "openai/openai-cookbook",
-    value: "OpenAI-CookBook",
+    key: "golang/go",
+    value: "Go",
   },
   {
-    key: "elastic/elasticsearch",
-    value: "Elastic Search",
+    key: "google/go-github",
+    value: "Go-github",
   },
   {
-    key: "milvus-io/pymilvus",
-    value: "Pymilvus",
+    key: "d3/d3",
+    value: "D3",
   },
+  {
+    key: "facebook/react",
+    value: "React",
+  },
+  {
+    key: "tensorflow/tensorflow",
+    value: "Tensorflow",
+  },
+  {
+    key: "keras-team/keras",
+    value: "Keras",
+  },
+  {
+    key: "pallets/flask",
+    value: "Flask",
+  },
+  {
+    key: "X golang/go google/go-github angular/material angular/angular-cli SebastianM/angular-google-maps d3/d3 facebook/react tensorflow/tensorflow keras-team/keras pallets/flask",
+    value: "Stars of every repo",
+  },
+  {
+    key: "Y golang/go google/go-github angular/material angular/angular-cli SebastianM/angular-google-maps d3/d3 facebook/react tensorflow/tensorflow keras-team/keras pallets/flask",
+    value: "Forks of every repo",
+  }
 ];
 
 export default function Home() {
@@ -70,9 +100,17 @@ export default function Home() {
   The repository "key" will be sent to flask microservice in a request body
   */
   const [repository, setRepository] = useState({
-    key: "angular/angular",
-    value: "Angular",
+    key: "golang/go",
+    value: "Go",
   });
+
+
+
+  //setting conditions for stars and forks as false by default, 
+  const [isStars, setIsStars] = useState('false');
+  const [isForks, setIsForks] = useState('false');
+  const [flag, setFlag] = useState('true');
+
   /*
   
   The first element is the initial state (i.e. githubRepoData) and the second one is a function 
@@ -92,6 +130,9 @@ export default function Home() {
   Everytime there is a change in a repository, useEffect will get triggered, useEffect inturn will trigger 
   the flask microservice 
   */
+  
+
+
   React.useEffect(() => {
     // set loading to true to display loader
     setLoading(true);
@@ -103,6 +144,8 @@ export default function Home() {
       // Append the repository key to request body
       body: JSON.stringify({ repository: repository.key }),
     };
+    //fetch("")
+    //setIsStar(true)
 
     /*
     Fetching the GitHub details from flask microservice
@@ -118,8 +161,34 @@ export default function Home() {
         (result) => {
           // On success set loading to false to display the contents of the resonse
           setLoading(false);
+           
+          if(result.stars!==undefined && result.forks==undefined){
+            setIsStars(true);
+            setIsForks(false);
+            setFlag(false);
+            setGithubData(result)
+            console.log("Instars-stars: ",isStars)
+            console.log("Instars-forks: ",isForks)
+
+          }
+          else if(result.forks!==undefined && result.stars==undefined){
+            setIsForks(true);
+            setIsStars(false);
+            setFlag(false);
+            setGithubData(result)
+            console.log("Infork-stars: ",isStars)
+            console.log("Infork-forks: ",isForks)
+          }
+          else
+          { 
+            setFlag(true);
+            setIsStars(false);
+            setIsForks(false);
+            console.log("chek")
           // Set state on successfull response from the API
           setGithubData(result);
+
+          }
         },
         // On failure from flask microservice
         (error) => {
@@ -131,7 +200,7 @@ export default function Home() {
         }
       );
   }, [repository]);
-
+  
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -183,23 +252,97 @@ export default function Home() {
         {loading ? (
           <Loader />
         ) : (
+
           <div>
-            {/* Render barchart component for a monthly created issues for a selected repositories*/}
-            <BarCharts
-              title={`Monthly Created Issues for ${repository.value} in last 1 year`}
+            {/* Render linechart component for weekly created issues for a selected repositories*/}
+            {flag && <LineCharts
+              title={`Issues of ${repository.value} in last 2 years`}
+              data={githubRepoData?.created_weekly}
+            />}
+
+            {/* Render barchart component for monthly created issues for a selected repositories*/}
+            {flag && <BarCharts
+              title={`Monthly Created Issues for ${repository.value} in last 2 years`}
               data={githubRepoData?.created}
-            />
-            {/* Render barchart component for a monthly created issues for a selected repositories*/}
-            <BarCharts
-              title={`Monthly Closed Issues for ${repository.value} in last 1 year`}
-              data={githubRepoData?.closed}
-            />
+            />}
+
+            {/* Render barchart component for weekly closed issues for a selected repositories*/}
+            {flag && <BarCharts
+              title={`Weekly Closed Issues for ${repository.value} in last 2 years`}
+              data={githubRepoData?.closed_weekly}
+            />}
+
+            {/* Render stackbar component for created and closed issues*/}
+            {flag && <StackBar
+              title={`Created and Closed Issues for ${repository.value} in last 2 years`}
+              data={githubRepoData?.created}
+              data2={githubRepoData?.closed}
+            />}
+            
+          
+
+            
+            {isStars && <StarBarCharts
+              title={`Number of stars for each repository`}
+              data={githubRepoData?.stars}
+              
+            />}
+            {isForks && <ForkBarCharts
+              title={`Number of forks for each repository`}
+              data={githubRepoData?.forks}
+              
+            />}
+            {flag && (<div>
+            <div>
+            <Typography variant="h5" component="div" gutterBottom>
+              The day of the week maximum number of issues created
+              </Typography>
+              <div>
+                
+                <img
+                  src={githubRepoData?.createdAtImageUrls?.day_max_issue_created}
+                  alt={"The day of the week maximum number of issues created"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>
+            <div>
+            <Typography variant="h5" component="div" gutterBottom>
+              The day of the week maximum number of issues Closed
+              </Typography>
+              <div>
+                
+                <img
+                  src={githubRepoData?.createdAtImageUrls?.day_max_issue_closed}
+                  alt={"The day of the week maximum number of issues Closed"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>
+           
+            <div>
+            <Typography variant="h5" component="div" gutterBottom>
+            The month of the year that has maximum number of issues closed
+              </Typography>
+              <div>
+                
+                <img
+                  src={githubRepoData?.createdAtImageUrls?.month_max_issues_closed}
+                  alt={"The month of the year that has maximum number of issues closed"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>
+            </div>)}
+
+            
             <Divider
               sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
             />
             {/* Rendering Timeseries Forecasting of Created Issues using Tensorflow and
                 Keras LSTM */}
-            <div>
+
+            {flag && (<div>
               <Typography variant="h5" component="div" gutterBottom>
                 Timeseries Forecasting of Created Issues using Tensorflow and
                 Keras LSTM based on past month
@@ -242,10 +385,107 @@ export default function Home() {
                   loading={"lazy"}
                 />
               </div>
-            </div>
+            </div>)}
+
+
             {/* Rendering Timeseries Forecasting of Closed Issues using Tensorflow and
                 Keras LSTM  */}
-            <div>
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Closed Issues using Tensorflow and
+                Keras LSTM based on past month
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Model Loss for Closed Issues
+                </Typography>
+                {/* Render the model loss image for closed issues  */}
+                {<img
+                  src={githubRepoData?.closedAtImageUrls?.model_loss_image_url}
+                  alt={"Model Loss for Closed Issues"}
+                  loading={"lazy"}
+                />}
+              </div>
+              <div>
+                <Typography component="h4">
+                  LSTM Generated Data for Closed Issues
+                </Typography>
+                {/* Render the LSTM generated image for closed issues */}
+                {<img
+                  src={
+                    githubRepoData?.closedAtImageUrls?.lstm_generated_image_url
+                  }
+                  alt={"LSTM Generated Data for Closed Issues"}
+                  loading={"lazy"}
+                />}
+              </div>
+              <div>
+                <Typography component="h4">
+                  All Issues Data for Closed Issues
+                </Typography>
+                {/* Render the all issues data image for closed issues*/}
+                <img
+                  src={githubRepoData?.closedAtImageUrls?.all_issues_data_image}
+                  alt={"All Issues Data for Closed Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+
+            {flag && (<div>
+            <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Created Issues using Tensorflow and
+                Keras LSTM based on past month
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Model Loss for Created Issues
+                </Typography>
+                {/* Render the model loss image for created issues */}
+                <img
+                  src={githubRepoData?.createdAtImageUrls?.model_loss_image_url}
+                  alt={"Model Loss for Created Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                  LSTM Generated Data for Created Issues
+                </Typography>
+                {/* Render the LSTM generated image for created issues*/}
+                <img
+                  src={
+                    githubRepoData?.createdAtImageUrls?.lstm_generated_image_url
+                  }
+                  alt={"LSTM Generated Data for Created Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                  All Issues Data for Created Issues
+                </Typography>
+                {/* Render the all issues data image for created issues*/}
+                <img
+                  src={
+                    githubRepoData?.createdAtImageUrls?.all_issues_data_image
+                  }
+                  alt={"All Issues Data for Created Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+            {/* Rendering Timeseries Forecasting of Closed Issues using Tensorflow and
+                Keras LSTM  */}
+            {flag && (<div>
               <Divider
                 sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
               />
@@ -289,7 +529,384 @@ export default function Home() {
                   loading={"lazy"}
                 />
               </div>
-            </div>
+            </div>)}
+            {/* Rendering Timeseries Forecasting of Pull Requests using Tensorflow and
+                Keras LSTM  */}
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Pull Requests using Tensorflow and
+                Keras LSTM based on past month
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Model Loss for Pull Requests
+                </Typography>
+                {/* Render the model loss image Pull Requests  */}
+                <img
+                  src={githubRepoData?.pullReqImageUrls?.model_loss_image_url}
+                  alt={"Model Loss for Pull Requests"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                  LSTM Generated Data for Pull Requests
+                </Typography>
+                {/* Render the LSTM generated image Pull Requests */}
+                <img
+                  src={
+                    githubRepoData?.pullReqImageUrls?.lstm_generated_image_url
+                  }
+                  alt={"LSTM Generated Data for Pull Requests"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                  All Issues Data for Pull Requests
+                </Typography>
+                {/* Render the all issues data image for Pull Requests*/}
+                <img
+                  src={githubRepoData?.pullReqImageUrls?.all_issues_data_image}
+                  alt={"All Issues Data for Pull Requests"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+            {/* Rendering Timeseries Forecasting of Commits using Tensorflow and
+                Keras LSTM  */}
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Commits using Tensorflow and
+                Keras LSTM based on past month
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Model Loss for Commits
+                </Typography>
+                {/* Render the model loss image Commits  */}
+                <img
+                  src={githubRepoData?.commitsImageUrls?.model_loss_image_url}
+                  alt={"Model Loss for Commits"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                  LSTM Generated Data for Commits
+                </Typography>
+                {/* Render the LSTM generated image Commits */}
+                <img
+                  src={
+                    githubRepoData?.commitsImageUrls?.lstm_generated_image_url
+                  }
+                  alt={"LSTM Generated Data for Commits"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                  All Issues Data for Commits
+                </Typography>
+                {/* Render the all issues data image for Commits*/}
+                <img
+                  src={githubRepoData?.commitsImageUrls?.all_issues_data_image}
+                  alt={"All Issues Data for Commits"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Created Issues using Facebook/Prophet 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Forecast of Created Issues
+                </Typography>
+                {/* Render the model loss image Created AT  */}
+                <img
+                  src={githubRepoData?.fb_createdAtImageUrls?.fbprophet_forecast_url}
+                  alt={"Forecast of Created Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Forecast Components of Created Issues
+                </Typography>
+                {/* Render the LSTM generated image Created At */}
+                <img
+                  src={
+                    githubRepoData?.fb_createdAtImageUrls?.fbprophet_forecast_components_url
+                  }
+                  alt={"Forecast Components of Created Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              
+            </div>)}
+
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Closed Issues using Facebook/Prophet 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Forecast of Closed Issues
+                </Typography>
+                {/* Render the model loss image Closed AT  */}
+                <img
+                  src={githubRepoData?.fb_closedAtImageUrls?.fbprophet_forecast_url}
+                  alt={"Forecast of Closed Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Forecast Components of Closed Issues
+                </Typography>
+                {/* Render the LSTM generated image Closed At */}
+                <img
+                  src={
+                    githubRepoData?.fb_closedAtImageUrls?.fbprophet_forecast_components_url
+                  }
+                  alt={"Forecast Components of Closed Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Pull Request using Facebook/Prophet 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Forecast of Pull Request
+                </Typography>
+                {/* Render the model loss image Closed AT  */}
+                <img
+                  src={githubRepoData?.fb_pullReqImageUrls?.fbprophet_forecast_url}
+                  alt={"Forecast of Pull Request"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Forecast Components of Pull Request
+                </Typography>
+                {/* Render the LSTM generated image Closed At */}
+                <img
+                  src={
+                    githubRepoData?.fb_pullReqImageUrls?.fbprophet_forecast_components_url
+                  }
+                  alt={"Forecast Components of Pull Request"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Commits using Facebook/Prophet 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                  Forecast of Commits
+                </Typography>
+                {/* Render the model loss image Commits  */}
+                <img
+                  src={githubRepoData?.fb_commitsImageUrls?.fbprophet_forecast_url}
+                  alt={"Forecast of Commits"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Forecast Components of Commits
+                </Typography>
+                {/* Render the LSTM generated image Commits */}
+                <img
+                  src={
+                    githubRepoData?.fb_commitsImageUrls?.fbprophet_forecast_components_url
+                  }
+                  alt={"Forecast Components of Commits"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Created Issues using StatsModel 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                Observation Graph of Created Issues
+                </Typography>
+                {/* Render the model loss image Created AT  */}
+                <img
+                  src={githubRepoData?.stat_createdAtImageUrls?.stats_observation_url}
+                  alt={"Observation Graph of Created Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Time Series Forecasting of Created Issues
+                </Typography>
+                {/* Render the LSTM generated image Created At */}
+                <img
+                  src={
+                    githubRepoData?.stat_createdAtImageUrls?.stats_forecast_url
+                  }
+                  alt={"Time Series Forecasting of Created Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              
+            </div>)}
+
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Closed Issues using StatsModel 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                Observation Graph of Closed Issues
+                </Typography>
+                {/* Render the model loss image Closed AT  */}
+                <img
+                  src={githubRepoData?.stat_closedAtImageUrls?.stats_observation_url}
+                  alt={"Observation Graph of Closed Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Time Series Forecasting of Closed Issues
+                </Typography>
+                {/* Render the LSTM generated image Closed At */}
+                <img
+                  src={
+                    githubRepoData?.stat_closedAtImageUrls?.stats_forecast_url
+                  }
+                  alt={"Forecast Components of Closed Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Pull Request Issues using StatsModel 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                Observation Graph of Pull Request Issues
+                </Typography>
+                {/* Render the model loss image Pull Request  */}
+                <img
+                  src={githubRepoData?.stat_pullReqImageUrls?.stats_observation_url}
+                  alt={"Observation Graph of Pull Request Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Time Series Forecasting of Pull Request Issues
+                </Typography>
+                {/* Render the LSTM generated image Closed At */}
+                <img
+                  src={
+                    githubRepoData?.stat_pullReqImageUrls?.stats_forecast_url
+                  }
+                  alt={"Forecast Components of Pull Request"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+            
+            {flag && (<div>
+              <Divider
+                sx={{ borderBlockWidth: "3px", borderBlockColor: "#FFA500" }}
+              />
+              <Typography variant="h5" component="div" gutterBottom>
+                Timeseries Forecasting of Commits Issues using StatsModel 
+                based on past months
+              </Typography>
+
+              <div>
+                <Typography component="h4">
+                Observation Graph of Commits Issues
+                </Typography>
+                {/* Render the model loss image Commits  */}
+                <img
+                  src={githubRepoData?.stat_commitsImageUrls?.stats_observation_url}
+                  alt={"Observation Graph of Commits Issues"}
+                  loading={"lazy"}
+                />
+              </div>
+              <div>
+                <Typography component="h4">
+                Time Series Forecasting of Commits Issues
+                </Typography>
+                {/* Render the LSTM generated image Closed At */}
+                <img
+                  src={
+                    githubRepoData?.stat_commitsImageUrls?.stats_forecast_url
+                  }
+                  alt={"Forecast Components of Commits"}
+                  loading={"lazy"}
+                />
+              </div>
+            </div>)}
+
           </div>
         )}
       </Box>
