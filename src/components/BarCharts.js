@@ -17,7 +17,7 @@ const BarCharts = (props) => {
       labels: {
         rotation: -45,
         style: {
-          fontSize: "9px",
+          fontSize: "13px",
           fontFamily: "Verdana, sans-serif",
         },
       },
