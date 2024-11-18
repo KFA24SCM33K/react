@@ -29,21 +29,29 @@ const drawerWidth = 240;
 // List of GitHub repositories 
 const repositories = [
   {
-    key: "angular/angular",
-    value: "Angular",
+    key: "langchain-ai/langchain",
+    value: "LangChain",
   },
   {
-    key: "angular/angular-cli",
-    value: "Angular-cli",
+    key: "langchain-ai/langgraph",
+    value: "LangGraph",
   },
   {
-    key: "angular/material",
-    value: "Angular Material",
+    key: "microsoft/autogen",
+    value: "Autogen",
   },
   {
-    key: "d3/d3",
-    value: "D3",
+    key: "openai/openai-cookbook",
+    value: "CookBook",
   },
+  {
+    key: "elastic/elasticsearch",
+    value: "ElasticSearch",
+  },
+  {
+    key: "milvus-io/pymilvus",
+    value: "PyMilvus",
+  }
 ];
 
 export default function Home() {
